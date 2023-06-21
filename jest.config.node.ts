@@ -8,7 +8,7 @@ const config:Config = {
    * The test environment that will be used for testing.
    * @link https://jestjs.io/docs/configuration/#testenvironment-string
    */
-  testEnvironment: 'jsdom'
+  testEnvironment: 'node'
 }
 
 export default config;
