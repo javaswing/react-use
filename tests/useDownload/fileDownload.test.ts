@@ -45,7 +45,7 @@ describe('fileDownload method', () => {
     });
 
     fileDownload(file, strFileName);
-    console.log('setAttributeMock', setAttributeMock);
+
     expect(setAttributeMock).toHaveBeenCalledWith('download', strFileName);
     setTimeout(() => {
       expect(clickMock).toHaveBeenCalledWith();
