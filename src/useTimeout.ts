@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from 'react';
 
 export default function useTimeout(fn: () => void, delay?: number) {
   const clearFlag = useRef<NodeJS.Timeout | null>(null);
@@ -10,10 +10,10 @@ export default function useTimeout(fn: () => void, delay?: number) {
   }, []);
 
   useEffect(() => {
-    if (typeof delay === "undefined" || delay < 0) return;
+    if (typeof delay === 'undefined' || delay < 0) return;
     clearFlag.current = setTimeout(fn, delay);
     return clear;
-  }, [fn, delay]);
+  }, [clear, delay, fn]);
 
   return clear;
 }
