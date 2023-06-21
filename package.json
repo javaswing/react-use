@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --maxWorkers 2",
     "test:watch": "jest --watch",
+    "test:ssr": "jest --maxWorkers 2 --config ./jest.config.node.ts",
     "test:coverage": "jest --coverage",
     "lint": "eslint \"{src,tests,stories}/**/*.{ts,tsx}\"",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "npm run lint --fix",
     "lint:types": "tsc --noEmit"
   },
   "keywords": [],
-  "author": "",
+  "author": "javaswing",
   "license": "MIT",
   "peerDependencies": {
     "react": "^16.8.0  || ^17.0.0 || ^18.0.0",
