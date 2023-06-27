@@ -1,16 +1,15 @@
-import { expect, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-hooks";
-import useTimeout from "../src/useTimeout";
+import { expect, jest } from '@jest/globals';
+import { renderHook } from '@testing-library/react-hooks';
+import useTimeout from '../src/useTimeout';
 
 interface ParamsObj {
   fn: (...arg: any) => any;
   delay: number | undefined;
 }
 
-const setUp = ({ fn, delay }: ParamsObj) =>
-  renderHook(() => useTimeout(fn, delay));
+const setUp = ({ fn, delay }: ParamsObj) => renderHook(() => useTimeout(fn, delay));
 
-describe("useTimeout", () => {
+describe('useTimeout', () => {
   beforeAll(() => {
     // enable fake time
     jest.useFakeTimers();
@@ -21,7 +20,7 @@ describe("useTimeout", () => {
     jest.useRealTimers();
   });
 
-  it("timeout should work", () => {
+  it('timeout should work', () => {
     // @see https://jestjs.io/zh-Hans/docs/mock-function-api/#jestfnimplementation
     // mock a function
     const callback = jest.fn();
@@ -32,7 +31,7 @@ describe("useTimeout", () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
-  it("timeout should stop", () => {
+  it('timeout should stop', () => {
     const callback = jest.fn();
 
     setUp({ fn: callback, delay: undefined });
@@ -44,9 +43,9 @@ describe("useTimeout", () => {
     expect(callback).toHaveBeenCalledTimes(0);
   });
 
-  it("timeout should be clear", () => {
+  it('timeout should be clear', () => {
     const callback = jest.fn();
-    jest.spyOn(global, "clearTimeout");
+    jest.spyOn(global, 'clearTimeout');
 
     const hook = setUp({ fn: callback, delay: 20 });
     expect(callback).not.toBeCalled();

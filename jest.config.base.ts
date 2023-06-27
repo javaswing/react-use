@@ -1,4 +1,4 @@
-import type { Config } from "jest";
+import type { Config } from 'jest';
 
 /*
  * For a detailed explanation regarding each configuration property and type check, visit:
@@ -11,7 +11,7 @@ const baseConfig: Config = {
    * @link https://kulshekhar.github.io/ts-jest/docs/getting-started/installation/#jest-config-file
    *
    */
-  preset: "ts-jest",
+  preset: 'ts-jest',
 
   /**
    * automatically clear mock calls
@@ -23,25 +23,25 @@ const baseConfig: Config = {
    * Indicates whether the coverage information should be collected while executing the test
    * @link https://jestjs.io/docs/configuration/#collectcoverage-boolean
    */
-  collectCoverage: true,
+  collectCoverage: false,
 
   /**
    * The directory where Jest should output its coverage files
    * @link https://jestjs.io/docs/configuration/#coveragedirectory-string
    */
-  coverageDirectory: "coverage",
+  coverageDirectory: 'coverage',
 
   /**
    * The glob patterns Jest uses to detect test files.
    * @link https://jestjs.io/docs/configuration/#testmatch-arraystring
    */
-  testMatch: ["<rootDir>/tests/**/*.test.(ts|tsx)"],
+  testMatch: ['<rootDir>/tests/**/*.test.(ts|tsx)'],
 
   /**
    * define global setup test file patterns
    * @link https://jestjs.io/docs/configuration/#setupfiles-array
    */
-  setupFiles: ['<rootDir>/tests/setupTests.ts']
+  setupFiles: ['<rootDir>/tests/setupTests.ts'],
 };
 
 export default baseConfig;
