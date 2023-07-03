@@ -114,5 +114,33 @@ describe('download service methods', () => {
         done();
       }, 400);
     });
+
+    it('should download photo (base64) with window location', () => {
+      // const revokeObjectURLMock = jest.fn();
+      // @ts-ignore
+      navigator.msSaveBlob = undefined;
+      Object.defineProperty(window, 'open', { value: jest.fn().mockImplementation(() => false) });
+      Object.defineProperty(window, 'confirm', { value: jest.fn().mockImplementation(() => true) });
+      Object.defineProperty(window, 'location', { value: {} });
+      Object.defineProperty(window, 'URL', { value: null });
+      // Object.defineProperty(window, 'URL', {
+      //   value: { createObjectURL: null },
+      // });
+      document.createElement = jest.fn<any>().mockImplementation(() => {
+        return { setAttribute: setAttributeMock, style: {}, click: clickMock };
+      });
+      downloadService.isSafari = jest.fn<() => boolean>().mockImplementationOnce(() => true);
+
+      downloadService.download(base64, strFileName, strMimeType);
+      expect(window.open).toHaveBeenCalledWith(
+        'application/json/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD'
+      );
+      expect(window.confirm).toHaveBeenCalledWith(
+        'Displaying New Document\n\nUse "Save As..." to download, then click back to return to this page.'
+      );
+      expect(window.location.href).toEqual(
+        'application/json/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD'
+      );
+    });
   });
 });

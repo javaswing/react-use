@@ -1,4 +1,4 @@
-import { BASE64_REG, GLOBAL_CONFIG } from './constants';
+import { GLOBAL_CONFIG } from './constants';
 
 type PayloadType = string | Blob;
 
@@ -23,6 +23,8 @@ class DownloadService {
     this.fileName = fileName;
     this.payload = data;
 
+    console.log('this.isPayloadBase64(this.payload)', this.isPayloadBase64(this.payload));
+
     if (this.isPayloadBase64(this.payload)) {
       if (this.isBigBase64()) {
         this.convertBase64ToBlob();
@@ -43,19 +45,24 @@ class DownloadService {
   }
 
   private saveBlob(payload: PayloadType) {
-    const blob = payload instanceof Blob ? payload : new Blob([payload], { type: this.mimeType });
+    console.log('payload', payload);
+    console.log('payload instanceof Blob', payload instanceof Blob);
+    const b = payload instanceof Blob ? payload : this.dataUrlToBlob(payload);
 
     // IE10+ support
     // https://learn.microsoft.com/en-us/previous-versions/hh772331(v=vs.85)
     if (navigator.msSaveBlob) {
-      return navigator.msSaveBlob(blob, this.fileName);
+      return navigator.msSaveBlob(b, this.fileName);
     }
 
     if (window.URL) {
-      return this.save(window.URL.createObjectURL(blob));
+      return this.save(window.URL.createObjectURL(b));
     } else {
-      if (this.isStringPayload(blob)) {
-        return this.saveBigBase64(blob);
+      console.log('else');
+      console.log('blob', b);
+      if (this.isStringPayload(b)) {
+        console.log('saveBigBase64');
+        return this.saveBigBase64(b);
       }
     }
   }
@@ -68,14 +75,28 @@ class DownloadService {
   }
 
   private save(url: string) {
+    console.log('url', url);
     const anchor = document.createElement('a');
     if ('download' in anchor) {
       return this.saveByAnchor(anchor, url);
     }
+    if (this.isSafari()) {
+      this.saveByLocationSafari(url);
+    }
     this.saveByIframe(url);
   }
 
-  saveByIframe(url: string) {
+  private saveByLocationSafari(url: string) {
+    const urlWithoutBase64 = url.replace(GLOBAL_CONFIG.BASE_64_REGEX, GLOBAL_CONFIG.DEFAULT_TYPE);
+    if (!window.open(urlWithoutBase64)) {
+      if (window.confirm(GLOBAL_CONFIG.CONFIRM_TEXT)) {
+        window.location.href = urlWithoutBase64;
+      }
+    }
+    return true;
+  }
+
+  private saveByIframe(url: string) {
     const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
     iframe.src = url;
@@ -110,18 +131,19 @@ class DownloadService {
     const decoder = parts[2] === 'base64' ? atob : decodeURIComponent;
     const binData = decoder(parts.pop() || '');
     const mx = binData.length;
-    const uiArr = new Uint8Array(mx);
+    const arrayBuffer = new ArrayBuffer(mx);
+    const uiArr = new Uint8Array(arrayBuffer);
 
     for (let index = 0; index < mx; index++) {
-      uiArr[index] += binData.charCodeAt(index);
+      uiArr[index] = binData.charCodeAt(index);
     }
 
-    return new Blob([uiArr], { type });
+    return new Blob([arrayBuffer], { type });
   }
 
   private isPayloadBase64(payload: PayloadType): payload is string {
     if (this.isStringPayload(payload)) {
-      return BASE64_REG.test(payload);
+      return GLOBAL_CONFIG.FULL_BASE_64_REGEX.test(payload);
     }
     return false;
   }
@@ -132,6 +154,10 @@ class DownloadService {
 
   private isStringPayload(payload: PayloadType): payload is string {
     return typeof payload === 'string';
+  }
+
+  isSafari() {
+    return GLOBAL_CONFIG.SAFARI_REGEX.test(navigator.userAgent);
   }
 }
 
