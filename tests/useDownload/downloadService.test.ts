@@ -18,8 +18,14 @@ describe('download service methods', () => {
       clickMock: any;
 
     beforeEach(() => {
-      base64 = 'data:image/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD';
-      file = new Blob(['data:image/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD'], { type: 'image/png' });
+      base64 =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+      file = new Blob(
+        [
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        ],
+        { type: 'image/png' }
+      );
       strFileName = 'photo.png';
       strMimeType = 'image/png';
       downloadMock = jest.fn();
@@ -115,31 +121,30 @@ describe('download service methods', () => {
       }, 400);
     });
 
-    it('should download photo (base64) with window location', () => {
-      // const revokeObjectURLMock = jest.fn();
+    it('should download photo (base64) with window location', async () => {
       // @ts-ignore
       navigator.msSaveBlob = undefined;
       Object.defineProperty(window, 'open', { value: jest.fn().mockImplementation(() => false) });
       Object.defineProperty(window, 'confirm', { value: jest.fn().mockImplementation(() => true) });
       Object.defineProperty(window, 'location', { value: {} });
-      Object.defineProperty(window, 'URL', { value: null });
-      // Object.defineProperty(window, 'URL', {
-      //   value: { createObjectURL: null },
-      // });
+      Object.defineProperty(window, 'URL', {
+        value: undefined,
+      });
+
       document.createElement = jest.fn<any>().mockImplementation(() => {
         return { setAttribute: setAttributeMock, style: {}, click: clickMock };
       });
       downloadService.isSafari = jest.fn<() => boolean>().mockImplementationOnce(() => true);
 
-      downloadService.download(base64, strFileName, strMimeType);
+      await downloadService.download(base64, strFileName, strMimeType);
       expect(window.open).toHaveBeenCalledWith(
-        'application/json/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD'
+        'application/json/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
       );
       expect(window.confirm).toHaveBeenCalledWith(
         'Displaying New Document\n\nUse "Save As..." to download, then click back to return to this page.'
       );
       expect(window.location.href).toEqual(
-        'application/json/png;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD'
+        'application/json/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
       );
     });
   });

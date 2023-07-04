@@ -11,42 +11,40 @@ class DownloadService {
   private mimeType: string;
   private fileName: string;
   private payload: PayloadType;
+  reader: FileReader;
 
   constructor() {
     this.mimeType = '';
     this.fileName = '';
     this.payload = '';
+    this.reader = new FileReader();
   }
 
-  public download(data: PayloadType, fileName: string, fileMimeType: string) {
+  public async download(data: PayloadType, fileName: string, fileMimeType: string) {
     this.mimeType = fileMimeType;
     this.fileName = fileName;
     this.payload = data;
-
-    console.log('this.isPayloadBase64(this.payload)', this.isPayloadBase64(this.payload));
 
     if (this.isPayloadBase64(this.payload)) {
       if (this.isBigBase64()) {
         this.convertBase64ToBlob();
       } else {
-        this.saveBase64(this.payload);
+        await this.saveBase64(this.payload);
       }
     } else {
-      this.saveBlob(this.payload);
+      await this.saveBlob(this.payload);
     }
   }
 
-  private saveBase64(blob: string) {
+  private async saveBase64(blob: string) {
     if (navigator.msSaveBlob) {
       navigator.msSaveBlob(this.dataUrlToBlob(blob), this.fileName);
     } else {
-      this.saveBlob(blob);
+      await this.saveBlob(blob);
     }
   }
 
-  private saveBlob(payload: PayloadType) {
-    console.log('payload', payload);
-    console.log('payload instanceof Blob', payload instanceof Blob);
+  private async saveBlob(payload: PayloadType) {
     const b = payload instanceof Blob ? payload : this.dataUrlToBlob(payload);
 
     // IE10+ support
@@ -54,18 +52,24 @@ class DownloadService {
     if (navigator.msSaveBlob) {
       return navigator.msSaveBlob(b, this.fileName);
     }
-
     if (window.URL) {
       return this.save(window.URL.createObjectURL(b));
     } else {
-      console.log('else');
-      console.log('blob', b);
       if (this.isStringPayload(b)) {
-        console.log('saveBigBase64');
         return this.saveBigBase64(b);
+      } else {
+        return this.convertByFileReader(b).then((b) => typeof b === 'string' && this.save(b));
       }
     }
   }
+
+  async convertByFileReader(b: Blob) {
+    return new Promise<string | ArrayBuffer | null>((resolve) => {
+      this.reader.onload = () => this.reader.result && resolve(this.reader.result);
+      this.reader.readAsDataURL(b);
+    });
+  }
+
   saveBigBase64(blob: string) {
     try {
       return this.save('data:' + this.mimeType + ';base64,' + window.btoa(blob));
@@ -74,14 +78,21 @@ class DownloadService {
     }
   }
 
+  /**
+   * 核心保存方法
+   * @param url
+   * @returns
+   * 1. 通过A标签进行保存
+   * 2. 检测如果是safari进行特殊处理
+   * 3. 通过iframe进行保存
+   */
   private save(url: string) {
-    console.log('url', url);
     const anchor = document.createElement('a');
     if ('download' in anchor) {
       return this.saveByAnchor(anchor, url);
     }
     if (this.isSafari()) {
-      this.saveByLocationSafari(url);
+      return this.saveByLocationSafari(url);
     }
     this.saveByIframe(url);
   }
@@ -125,20 +136,19 @@ class DownloadService {
     }
   }
 
-  private dataUrlToBlob(strUrl: string) {
+  public dataUrlToBlob(strUrl: string) {
     const parts = strUrl.split(/[:;,]/);
     const type = parts[1];
     const decoder = parts[2] === 'base64' ? atob : decodeURIComponent;
     const binData = decoder(parts.pop() || '');
-    const mx = binData.length;
-    const arrayBuffer = new ArrayBuffer(mx);
-    const uiArr = new Uint8Array(arrayBuffer);
+    const length = binData.length;
 
-    for (let index = 0; index < mx; index++) {
-      uiArr[index] = binData.charCodeAt(index);
+    const buf = new ArrayBuffer(length);
+    const arr = new Uint8Array(buf);
+    for (let index = 0; index < length; index++) {
+      arr[index] = binData.charCodeAt(index);
     }
-
-    return new Blob([arrayBuffer], { type });
+    return new Blob([buf], { type });
   }
 
   private isPayloadBase64(payload: PayloadType): payload is string {
